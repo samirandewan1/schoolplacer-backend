@@ -1,6 +1,6 @@
-require("dotenv").config();
+import 'dotenv/config';
 
-module.exports = {
+const config = {
   ENV: process.env.ENV || "development",
   PORT: process.env.PORT || 3000,
   MONGO: {
@@ -14,15 +14,21 @@ module.exports = {
     port: process.env.REDIS_PORT,
     password: process.env.REDIS_PASSWORD,
     db: process.env.REDIS_DB,
+    mode: process.env.REDIS_MODE,
+    clusternode: process.env.REDIS_CLUSTER_NODES,
+    sentinelnode: process.env.REDIS_SENTINEL_NODES,
+    sentinelname: process.env.REDIS_SENTINEL_NAME,
   },
   SOCKET: {
     allowedorigins: process.env.ALLOWED_ORIGIN,
-    crdentials: process.env.CREDENTIALS,
+    credentials: process.env.CREDENTIALS,
     methods: process.env.METHODS,
     transport: process.env.TRANSPORT,
-    pingtimeout: process.env.PINGTIMEOUT,
-    pinginterval: process.env.PINGINTERVAL,
-    maxdisconnectiontime: process.env.MAXDISCONNECTIONDURATION,
-    skipmiddleware: process.env.SKIPMIDDLEWARE,
+    pingtimeout: parseInt(process.env.PINGTIMEOUT),
+    pinginterval: parseInt(process.env.PINGINTERVAL),
+    maxdisconnectiontime: parseInt(process.env.MAXDISCONNECTIONDURATION),
+    skipmiddleware: String(process.env.SKIPMIDDLEWARE) === "true",
   },
 };
+
+export default config;

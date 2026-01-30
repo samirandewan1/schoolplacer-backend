@@ -32,6 +32,7 @@ const ioRedisClient = () => {
       }
     },
   };
+  console.log(JSON.stringify(options))
   const redisClient = new Redis(options);
   redisClient.on("ready", () => {
     console.log("redis is ready");
