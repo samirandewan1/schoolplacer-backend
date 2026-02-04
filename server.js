@@ -8,7 +8,7 @@ import {VerifySocketConnection} from "./src/utils/verifysocketconnection.js";
 import { connectToDatabase } from './src/config/mongo.js';
 try {
   const PORT = config.PORT || 3000;
-  await connectToDatabase();
+//  await connectToDatabase();
   const redisClient = await redisManager.init();
   const server = http.createServer(app);
   const io = socketService.init(server);
