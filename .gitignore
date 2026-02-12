@@ -1,4 +1,5 @@
 node_modules
 .servertest.js
 .Dockerfile1
-.env1
+.env
+.env-local

@@ -5,23 +5,25 @@ let client;
 let db;
 
 async function connectToDatabase() {
-  const uri = config.MONGO.uri;
-
-  if (!uri) {
+  //console.log(">>> MONGODB_URI =" ,JSON.stringify(config));
+  const MONGODB_URI=  config.MONGO.isatlas === "true" ? config.MONGO.mongouri : `mongodb://${config.MONGO.username}:${config.MONGO.password}@${config.MONGO.domain}:27017/${config.MONGO.dbname}?authSource=admin`
+  //console.log(">>> MONGODB_URI =" ,MONGODB_URI);
+  if (!MONGODB_URI) {
     throw new Error("MONGODB_URI environment variable is not defined");
   }
 
   try {
-    client = new MongoClient(uri, {
+    client = new MongoClient(MONGODB_URI, {
       maxPoolSize: 50, 
       minPoolSize: 10,
       connectTimeoutMS: 10000,
     });
 
     await client.connect();
-    db = client.db("Report"); 
-    
-    console.log("MongoDB Connected to database: Report");
+    const db = client.db("Temp");
+    await db.command({ ping: 1 });
+   
+    console.log("MongoDB Connected successful");
 
     //await setupIndexes();
 

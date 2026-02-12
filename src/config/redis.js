@@ -40,7 +40,6 @@ class IORedisManager {
        await this.initSentinel();
     } 
     else {
-      console.log("else part");
       await this.initStandalone('standalone');
     }
     return this;
@@ -125,7 +124,6 @@ class IORedisManager {
       password: config.REDIS.password,
       db: config.REDIS.db,
     };
-    // console.log(JSON.stringify({...options, connectionName: `redis-${name}-pub` }));
     this.redisClient = new Redis({...options, connectionName: `redis-${name}-client`});
     this.pubClient = new Redis({...options, connectionName: `redis-${name}-pub`});
     this.subClient = new Redis({...options, connectionName: `redis-${name}-sub`});
@@ -133,16 +131,16 @@ class IORedisManager {
     this.registerEvents(this.redisClient, `${name}-CLIENT`);
     this.registerEvents(this.pubClient, `${name}-PUB`);
     this.registerEvents(this.subClient, `${name}-SUB`);
+    console.log('redis connecte correctly');
   }
   registerEvents(client, label) {
     client.on("connect", () => console.log(`[Redis:${label}] Connected`));
-
+    
     client.on("ready", () => console.log(`[Redis:${label}] Ready`));
 
     client.on("error", (err) => console.error(`[Redis:${label}] Error`, err));
 
-    client.on("close", () =>
-      console.warn(`[Redis:${label}] Connection closed`),
+    client.on("close", () => console.warn(`[Redis:${label}] Connection closed`),
     );
   }
 

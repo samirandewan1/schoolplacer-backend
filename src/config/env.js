@@ -4,9 +4,12 @@ const config = {
   ENV: process.env.ENV || "development",
   PORT: process.env.PORT || 3000,
   MONGO: {
-    uri: process.env.DB_MONGO_URI || "http://localhost:3000",
     username: process.env.MONGO_USERNAME,
     password: process.env.MONGO_PASSWORD,
+    dbname: process.env.MONGO_INITDB_DATABASE,
+    domain: process.env.MONGO_DOMAIN,
+    isatlas: process.env.MONGO_ATLAS,
+    mongouri: process.env.DB_MONGO_URI,
     options: {},
   },
   REDIS: {

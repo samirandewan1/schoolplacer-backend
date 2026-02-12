@@ -1,0 +1,40 @@
+services:
+  backend:
+    #image: samnox/school-repo:latest
+    build: .
+    ports:
+      - '80:3000'
+    container_name: node-backend
+    restart: always
+    depends_on:
+      - redis
+      - mongodb
+    # environment:
+    #   - name={MONGO_USERNAME}
+    #   - name={MONGO_PASSWORD}
+  redis:
+    image: redis:7.4
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    container_name: redis
+    volumes:
+      - redis_data:/data
+  mongodb:
+    image: mongo:8.0
+    restart: always
+    ports:
+      - '27017:27017'  
+    volumes:
+      - data:/data/db 
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+volumes:
+  redis_data:
+  data:
+    
+    

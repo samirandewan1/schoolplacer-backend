@@ -34,7 +34,7 @@ const validate = (socket, context) => {
   const missingFields = requiredFields.filter((field) => !context[field]);
 
   if (missingFields.length) {
-    return reject(
+    return reject(socket,
       `${role} missing mandatory fields`,
       `For ${role} role: ${missingFields.join(", ")} are mandatory.`,
     );
