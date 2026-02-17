@@ -6,28 +6,33 @@ let db;
 
 async function connectToDatabase() {
   //console.log(">>> MONGODB_URI =" ,JSON.stringify(config));
-  const MONGODB_URI=  config.MONGO.isatlas === "true" ? config.MONGO.mongouri : `mongodb://${config.MONGO.username}:${config.MONGO.password}@${config.MONGO.domain}:27017/${config.MONGO.dbname}?authSource=admin`
+  const MONGODB_URI =
+    config.MONGO.isatlas === "true"
+      ? config.MONGO.mongouri
+      : `mongodb://${config.MONGO.username}:${config.MONGO.password}@${config.MONGO.domain}:27017/${config.MONGO.dbname}?authSource=admin`;
   //console.log(">>> MONGODB_URI =" ,MONGODB_URI);
   if (!MONGODB_URI) {
     throw new Error("MONGODB_URI environment variable is not defined");
   }
 
   try {
-    client = new MongoClient(MONGODB_URI, {
-      maxPoolSize: 50, 
-      minPoolSize: 10,
-      connectTimeoutMS: 10000,
-    });
+    if (!db) {
+      client = new MongoClient(MONGODB_URI, {
+        maxPoolSize: 50,
+        minPoolSize: 10,
+        connectTimeoutMS: 10000,
+      });
 
-    await client.connect();
-    const db = client.db("Temp");
-    await db.command({ ping: 1 });
-   
-    console.log("MongoDB Connected successful");
+      await client.connect();
+      db = client.db("Placer");
+      await db.command({ ping: 1 });
+
+      console.log("MongoDB Connected successful");
+    }
 
     //await setupIndexes();
 
-    return { client, db };
+    return { db };
   } catch (error) {
     console.error("MongoDB Connection Error:", error);
     throw error;
@@ -37,7 +42,9 @@ async function connectToDatabase() {
 //  Dedicated function to keep server.js clean
 async function setupIndexes() {
   try {
-    await db.collection("location_history").createIndex({ busId: 1, timestamp: -1 });
+    await db
+      .collection("location_history")
+      .createIndex({ busId: 1, timestamp: -1 });
     await db.collection("buses").createIndex({ busId: 1 }, { unique: true });
     console.log("High-traffic indexes verified");
   } catch (err) {
@@ -45,8 +52,7 @@ async function setupIndexes() {
   }
 }
 
-
-export const getDb = () => {
+ const getDb = () => {
   if (!db) {
     throw new Error("Database not initialized! Call connectToDatabase first.");
   }
@@ -60,4 +66,4 @@ export async function closeDatabaseConnection() {
   }
 }
 
-export { connectToDatabase, db, client };
+export { connectToDatabase, getDb };

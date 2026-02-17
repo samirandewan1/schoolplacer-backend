@@ -32,6 +32,9 @@ const config = {
     maxdisconnectiontime: parseInt(process.env.MAXDISCONNECTIONDURATION),
     skipmiddleware: String(process.env.SKIPMIDDLEWARE) === "true",
   },
+  SECRET: {
+    jwt_key: process.env.JWT_SECRET,
+  }
 };
 
 export default config;

@@ -7,7 +7,10 @@ import compression from "compression";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import config from "./src/config/env.js";
-import router from "./src/routes/gpslocation.routes.js";
+import locationRoutes from "./src/routes/location.js";
+import adminRoutes from "./src/routes/admin.js"
+import { isAuth } from "./src/middleware/authGuard.js";
+
 
 const app = express();
 
@@ -20,11 +23,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(rootDir, "public")));
 
-app.use("/api/v1", router);
+//Admin Routes
+app.use("/admin", adminRoutes);
+
+app.use("/api/v1", locationRoutes);
 
 
 
-app.get("/ping", (req, res)=>{
+app.get("/ping", isAuth, (req, res)=>{
   res.status(200).send('Hello')
 });
 

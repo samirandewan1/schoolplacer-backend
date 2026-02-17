@@ -1,0 +1,157 @@
+{
+  "data": {
+    "form": {
+      "name": "Appollo Delhi",
+      "parentorg":{"id": "699088212d1f707842f6c355", "name": "Appollo"},
+      "category": "school",
+      "address": "1st Main 5th Corss",
+      "area": "NCR",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "country": "India",
+      "website": "www.upten.com",
+      "email": "appl@pr.com",
+      "description": "Service",
+      "orgStartTime": "19:12",
+      "orgEndTime": "21:00",
+      "status": "active",
+      "callingURL": "",
+      "alertlock": "true",
+      "etaAlert": "true",
+      "cameraModuleView": "true",
+      "smsAlert": "true",
+      "appAlert": "true",
+      "emailAlert": "true",
+      "callAlert": "true",
+      "rfidAlert": "false",
+      "otherlang": "true",
+      "contactInformation": {
+        "0": {
+          "name": "desouza",
+          "phone": "7777777777",
+          "email": "mira@usinc.com",
+          "designation": "Teansport Manager"
+        }
+      },
+      "location": {
+        "lattitude": 12.925606682725478,
+        "longitude": 77.55923818293005,
+        "locationAddress": "2nd Block,  Stage, Banashankari,  India"
+      },
+      "classLists": ["1,2,3,4,5"],
+      "SectionLists": ["a,b,c,d"],
+      "reports": {
+        "rfid": {
+          "general": true,
+          "RFIDWithClass": true,
+          "RFIDWithMember": true,
+          "RFIDWithRoute": true,
+          "RFIDAppPush": true,
+          "RFIDWithAttendance": true,
+          "RFIDWithSmsLog": true,
+          "RFIDStatusCheck": true,
+          "rfidNotAssign": true,
+          "RFIDSwipeCount": true,
+          "RFIDRouteWiseCount": true
+        },
+        "tracking": {
+          "movement": true,
+          "halt": true,
+          "haltDurationReport": true,
+          "movementandhalt": true,
+          "overspeed": true,
+          "lowspeed": true,
+          "betweentwospeed": true,
+          "daysummary": true,
+          "vehcoordinate": true,
+          "routeDeviation": { "routeDeviation": false }
+        },
+        "alertlog": {
+          "callalertmadelog": true,
+          "routehistorylog": true,
+          "memberhistorylog": true,
+          "callLogCount": true,
+          "callMadeReport": true,
+          "callEligibleReport": true,
+          "callMadeEarly": true,
+          "callMadeDelayed": true,
+          "nrOnTime": true,
+          "rOnTime": true,
+          "callProcessedReport": true,
+          "callProcessedAnalysReport": true,
+          "appReportsLog": { "appReportsLog": false }
+        },
+        "analytics": { "notreached": true },
+        "others": {
+          "panic": true,
+          "vehiclelastupdate": true,
+          "engine": true,
+          "ac": true,
+          "accanddecc": true,
+          "routevehiclemapped": true,
+          "geofence": true,
+          "otherOverspeed": true,
+          "notificationAlert": true,
+          "vehicleBasedNotificationAlert": true,
+          "breakDownReport": true
+        },
+        "attendance": {
+          "routewiseAttendance": true,
+          "datewiseAttendance": true,
+          "memberwiseAttendance": true
+        },
+        "studentroutemanagement": { "studentRouteManagement": true },
+        "routeanalytics": { "routeAnalytics": true },
+        "routeAdhoc": { "routeAdhoc": true },
+        "vehicleManagement": { "vehicleManagement": true },
+        "faceAttendance": { "faceAttendance": true },
+        "routeDashboard": { "routeDashboard": true },
+        "referenceRouteMap": { "referenceRouteMap": true }
+      },
+      "weekdays": {
+        "sunday": false,
+        "monday": true,
+        "tuesday": true,
+        "wednesday": true,
+        "thursday": true,
+        "friday": true,
+        "saturday": true
+      },
+      "schoolsessionLists": [
+        {
+          "sessionName": "Morning",
+          "sessionStartTime": "05:15",
+          "sessionEndTime": "07:15",
+          "checked": true
+        },
+        {
+          "sessionName": "Evening",
+          "sessionStartTime": "15:55",
+          "sessionEndTime": "17:55",
+          "checked": true
+        },
+        {
+          "sessionName": "night",
+          "sessionStartTime": "00:15",
+          "sessionEndTime": "02:15"
+        }
+      ]
+    },
+    "filter": { "organizationId": "kigjlWpZqKQeFXLuPmEH3617801770965075" }
+  }
+}
+
+// {
+//     "firstName": "dev",
+//     "lastName": "test",
+//     "email": "admin@groupten.com",
+//     "password": "",
+//     "loginName": "sysadmin",
+//     "mobile": "123456",
+//     "designation": "TL",
+//     "emergencyMobile": "1234",
+//     "country": "india",
+//     "address": "chennai, guindy",
+//     "city": "chennai",
+//     "status": "active"
+// }
