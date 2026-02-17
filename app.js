@@ -8,7 +8,7 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import config from "./src/config/env.js";
 import locationRoutes from "./src/routes/location.js";
-import adminRoutes from "./src/routes/admin.js"
+import router from "./src/routes/admin.js"
 import { isAuth } from "./src/middleware/authGuard.js";
 
 
@@ -24,8 +24,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(rootDir, "public")));
 
 //Admin Routes
-app.use("/admin", adminRoutes);
+app.use("/admin", router);
 
+// //Organization Routes
+// app.use("/admin", adminRoutes);
+
+//Location Routes
 app.use("/api/v1", locationRoutes);
 
 

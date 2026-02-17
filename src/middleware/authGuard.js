@@ -15,8 +15,11 @@ export const isAuth = (req, res, next) => {
          return res.status(401).json({ status: "failure", message: "invalid token" });
       }
     }
-    if (!decoded.role || decoded.role !== "admin")
+    if (!decoded.role || decoded.role !== "admin"){
       return res.status(403).json({ status: "failure", message: "not an admin user" });
+    }
+    req.role   = decoded.role;
+    req.initiator = decoded.accountName;
     next();
   });
 };

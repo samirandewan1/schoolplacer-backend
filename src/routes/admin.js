@@ -1,29 +1,44 @@
 import express from "express";
-import { authAdmin, orgStats, resetPassword, createOrganization, updateOrganization, createUser, updateUser,viewUsers,orgView, addImei, updateImei} from "../controller/authAdmin.js";
+import { authAdmin, orgStats, createUser, updateUser,viewUsers,orgView, addImei, updateImei} from "../controller/authAdmin.js";
+import { resetPassword, createUser, updateUser, viewUsers } from "../controller/users.js";
+import { createOrganization, editOrganization } from "../controller/organization.js";
 import { isAuth} from "../middleware/authGuard.js";
 
-const adminRoutes = express.Router();
+const router = express.Router();
 //admin/adminauthentication
-adminRoutes.post("/adminauthentication", authAdmin);
-//admin/admin_dashboardcounts
-adminRoutes.post("/admin_dashboardcounts", isAuth, orgStats);
-//admin/create
-adminRoutes.post("/create", isAuth, createOrganization);
-//admin/view
-adminRoutes.post("/view", isAuth, orgView);
-//admin/edit
-adminRoutes.post("/edit", isAuth, updateOrganization);
-//admin/newuser
-adminRoutes.post("/newuser", isAuth, createUser);
-//admin/viewuser
-adminRoutes.post("/viewuser", isAuth, viewUsers);
-//admin/updateuser
-adminRoutes.post("/updateuser", isAuth, updateUser);
-//admin/newtracker
-adminRoutes.post("/addImei", isAuth, addImei);
-//admin/newtracker
-adminRoutes.post("/updateImei", isAuth, updateImei);
-//admin/orgadmin_updatepassword
-adminRoutes.post("/orgadmin_updatepassword", isAuth, resetPassword);
+router.post("/adminauthentication", authAdmin);
 
-export default adminRoutes;
+
+//organization
+
+//admin/admin_dashboardcounts
+router.post("/admin_dashboardcounts", isAuth, orgStats);
+//admin/create
+router.post("/create", isAuth, createOrganization);
+//admin/edit
+router.post("/edit", isAuth, editOrganization);
+//admin/view
+router.post("/view", isAuth, orgView);
+
+//user
+
+//admin/newuser
+router.post("/newuser", isAuth, createUser);
+//admin/viewuser
+router.post("/viewuser", isAuth, viewUsers);
+//admin/updateuser
+router.post("/updateuser", isAuth, updateUser);
+//admin/orgadmin_updatepassword
+router.post("/orgadmin_updatepassword", isAuth, resetPassword);
+
+
+//tracking
+
+//admin/newtracker
+router.post("/addImei", isAuth, addImei);
+//admin/newtracker
+router.post("/updateImei", isAuth, updateImei);
+
+
+
+export default router;

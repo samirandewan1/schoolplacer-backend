@@ -18,6 +18,7 @@ export const createUserSchema = Joi.object({
   organizationId: Joi.string().required(),
   modifiedAt: Joi.string().isoDate().default(() => new Date().toISOString()),
   status: Joi.string().valid("active", "disabled").default("active"),
+  
 });
 
 export const updateUserSchema = Joi.object({
@@ -35,8 +36,14 @@ export const updateUserSchema = Joi.object({
   state: Joi.string(),
   country: Joi.string(),
   campaignType: Joi.string().valid("sms", "broadcast", "both"),
-  organizationId: Joi.string(),
+  organizationId: Joi.string().required(),
   levels: Joi.number(),
   modifiedAt: Joi.string().isoDate().default(() => new Date().toISOString()),
   status: Joi.string().valid("active", "disabled").optional(),
 });
+
+export const resetUserSchema = Joi.object({
+  loginname: Joi.string().required(),
+  password: Joi.string().required(),
+  modifiedAt: Joi.string().isoDate().default(() => new Date().toISOString()),
+})
