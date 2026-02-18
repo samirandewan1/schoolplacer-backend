@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
 import actionLog from "../utils/helper.js";
 import { getDb } from "../config/mongo.js";
+import { encrypt } from "../utils/crypto.js";
 import {  createUserSchema, updateUserSchema, resetUserSchema } from "../validator/orgUserSchema.js";
 
 
@@ -23,18 +24,18 @@ export const createUser = async (req, res) => {
       organizationId: value.organizationId,
       status: 'active',
     });
-    if (userExists > 0) return res.json({ status: 'failure', message: 'user already exists' });
+    if (userExists > 0) return res.status(400).json({ status: 'failure', message: 'user already exists' });
     // Check duplicate email
      const emailExists = await db.collection('organization_users').countDocuments({
       email: value.email,
       status: 'active',
      });
-     if (emailExists > 0) return res.json({ status: 'failure', ec: 'user already exists' });
+     if (emailExists > 0) return res.status(400).json({ status: 'failure', message: 'user with same email already exists' });
 
-    const securePassword = await bcrypt.hash(value.password, 12);
+    const securePassword = encrypt(value.password);
     const { acknowledged, insertedId } = await userColl.insertOne({...value, password: securePassword});
     if(acknowledged){
-      return res.status(200).json({ status: "success", message: insertedId });
+      return res.status(200).json({ status: "success", userId: insertedId });
     }
     return res.status(400).json({ status: "failure", message: "failed to insert the record" });
 
@@ -64,27 +65,41 @@ export const updateUser = async (req, res) => {
     }
      await actionLog(userData, initiator, role, 'updateUser');
 
-    const searchQuery = { loginname: loginname, status: "active", organizationId: orgId, _id: { $ne: new ObjectId(userId) } };
-    const exists = await userColl.findOne(searchQuery);
-    if (exists) {
-       return res.status(400).json({ status: "failure", message: "user already exist."});
-    }
-     if(value.password){
-       const securePassword = await bcrypt.hash(value.password, 12);
+    // const searchQuery = { loginname: loginname, status: "active", organizationId: orgId, _id: { $ne: new ObjectId(userId) } };
+    // const exists = await userColl.findOne(searchQuery);
+    // if (exists) {
+    //    return res.status(400).json({ status: "failure", message: "user already exist."});
+    // }
+     if (value.loginname) {
+        //document.loginName = value.loginname;
+        const loginExists = await db.collection('organization_users').countDocuments({
+        loginName: value.loginname,
+        organizationId: orgId,
+        status: 'active',
+        });
+        if (loginExists > 0) {
+          const existing = await db.collection('organization_users').findOne({ _id: new ObjectId(userId) });
+          if (existing?.loginName !== value.loginname) {
+            return res.json({ status: 'failure', message: 'user already exist' });
+          }
+        }
+      }
+      if(value.password){
+       const securePassword = encrypt(value.password);
        value.password = securePassword;
-     }
-    const result = await userColl.updateOne({_id: new ObjectId(userId), organizationId: orgId}, {$set: value});
-    console.log(JSON.stringify(result));
-    if(result.acknowledged){
-      return res.status(200).json({ status: "success", message: "user updated successfully" });
-    }
-     return res.status(400).json({ status: "failure", message: "failed to update the record" });
+      }
+      const result = await userColl.updateOne({_id: new ObjectId(userId), organizationId: orgId}, {$set: value});
+      
+      if(result.acknowledged){
+        return res.status(200).json({ status: "success", message: "user updated successfully" });
+      }
+      return res.status(400).json({ status: "failure", message: "failed to update the record" });
 
-  } catch (error) {
-    console.error(`Error on updateOrganization: ${error}`);
-    return res.status(500).json({ status: "failure", message: "Internal server error" });
-  }
-};
+    } catch (error) {
+      console.error(`Error on updateOrganization: ${error}`);
+      return res.status(500).json({ status: "failure", message: "Internal server error" });
+    }
+  };
 
 
 export const viewUsers = async (req, res) => {
@@ -120,7 +135,7 @@ export const viewUsers = async (req, res) => {
     }
 
     if (filterBy.loginname) {
-      searchQuery.loginName = { $regex: filterBy.loginname, $options: "i" };
+      searchQuery.loginname = { $regex: filterBy.loginname, $options: "i" };
     }
 
     if (filterBy.email) {
@@ -178,12 +193,12 @@ export const resetPassword = async (req, res) => {
     if (!adminUser) {
       return res.status(400).json({ status: "failure", message: "user not found" });
     }
-    const securepassword = await bcrypt.hash(value.password, 12);
+    const securePassword = await bcrypt.hash(value.password, 12);
     const result = await adminUsers.updateOne({loginname: adminUser.loginname}, {$set: {password: securepassword}})
     if(result.modifiedCount === 0){
-      return res.status(400).json({ status: "failure", message: "password not updated" });
+      return res.status(400).json({ status: "failure", message: "password is not updated" });
     }
-    return res.status(200).json({ status: "success", message: "password updated" });
+    return res.status(200).json({ status: "success", message: "password is updated" });
 
   } catch (error) {
     console.error(`Error on authAdmin: ${error}`);

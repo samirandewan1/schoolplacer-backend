@@ -194,7 +194,8 @@ export const deleteOrganization = async (req, res) => {
   }
 
   // Soft-delete org
-  await db.collection('organization').updateOne({ _id: new ObjectId(value.organizationId) }, { $set: { status: 'hold' } });
+  console.log(JSON.stringify({ _id: new ObjectId(organizationId)}, { $set: { status: 'hold' }}))
+  await db.collection('organization').updateOne({ _id: new ObjectId(organizationId)}, { $set: { status: 'hold' }});
   // Cascade to users, trackers, routes, pickup, members, templates
   const cascade = { organizationId: value.organizationId, status: 'active' };
   await db.collection('organization_users').updateMany(cascade, { $set: { status: 'hold' } });
