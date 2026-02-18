@@ -169,7 +169,7 @@ export const viewOrganization = async (req, res) => {
     return item;
   }));
 
-  return res.json({ status: 'success', response: organizations });
+  return res.status(200).json({ status: 'success', response: organizations });
    }catch(error){
    console.error(`Error on view organization: ${error}`);
     return res.status(500).json({ status: "failure", message: "Internal server error" });
@@ -178,23 +178,23 @@ export const viewOrganization = async (req, res) => {
 
 export const deleteOrganization = async (req, res) => {
   const form = req.body.data?.form;
-  const organizationId = req.body.data?.organizationId;
+  const organizationId = req.body.data.form?.organizationId;
   const { initiator, role} = req;
   await actionLog(form, initiator, role, 'deleteOrganization');
 
   const { error, value } = deleteOrgSchema.validate(form, { abortEarly: false });
   if (error) {
-    return res.json({ status: 'failure', message: 'parameter missing' });
+    return res.status(400).json({ status: 'failure', message: 'parameter missing' });
   }
 
   const db  = getDb();
-  const org = await db.collection('organization').findOne({ tracker: organizationId, status: 'active' });
+  const org = await db.collection('organization').findOne({ _id: new ObjectId(organizationId), status: 'active' });
   if (!org) {
-    return res.json({ status: 'failure', message: 'failed to delete' });
+    return res.status(404).json({ status: 'failure', message: 'organization not found' });
   }
 
   // Soft-delete org
-  await db.collection('organization').updateOne({ tracker: value.organizationId }, { $set: { status: 'hold' } });
+  await db.collection('organization').updateOne({ _id: new ObjectId(value.organizationId) }, { $set: { status: 'hold' } });
   // Cascade to users, trackers, routes, pickup, members, templates
   const cascade = { organizationId: value.organizationId, status: 'active' };
   await db.collection('organization_users').updateMany(cascade, { $set: { status: 'hold' } });
@@ -210,14 +210,14 @@ export const deleteOrganization = async (req, res) => {
   // Action log
   await db.collection('actionLog').insertOne({ action: 'delete', collection: 'organizations', user: initiator });
 
-  return res.json({ status: 'success' });
+  return res.status(200).json({ status: 'success' });
 }
 
 
 export const adminDashBoardCount = async (req, res) => {
   try {
     const { initiator, role} = req;
-   await actionLog('form', initiator, role, 'adminDashBoardCount');
+   await actionLog('adminDashBoardCount', initiator, role, 'adminDashBoardCount');
 
      const query = { status: "active" };
     const db = getDb();
