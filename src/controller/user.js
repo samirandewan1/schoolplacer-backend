@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { ObjectId } from "mongodb";
 import actionLog from "../utils/helper.js";
 import { getDb } from "../config/mongo.js";
 import {  createUserSchema, updateUserSchema, resetUserSchema } from "../validator/orgUserSchema.js";
@@ -19,7 +20,7 @@ export const createUser = async (req, res) => {
     const userColl = db.collection("organization_users");
     const userExists = await db.collection('organization_users').countDocuments({
       loginName: value.loginname,
-      organizationTracker: value.organizationId,
+      organizationId: value.organizationId,
       status: 'active',
     });
     if (userExists > 0) return res.json({ status: 'failure', message: 'user already exists' });
@@ -49,6 +50,8 @@ export const updateUser = async (req, res) => {
     const loginname = userData.loginname;
     const orgId = req.body.data.filter?.organizationId;
     const userId = req.body.data.filter?.userId;
+    const { initiator, role} = req;
+   
     if (!userData || !orgId || !loginname) {
       return res.status(400).json({ status: "failure", message: "Missing input" });
     }
@@ -59,6 +62,8 @@ export const updateUser = async (req, res) => {
       const validationErrors = error.details.map(detail => detail.message);
       return res.status(400).json({ status: "failure", message: validationErrors });
     }
+     await actionLog(userData, initiator, role, 'updateUser');
+
     const searchQuery = { loginname: loginname, status: "active", organizationId: orgId, _id: { $ne: new ObjectId(userId) } };
     const exists = await userColl.findOne(searchQuery);
     if (exists) {
@@ -87,6 +92,7 @@ export const viewUsers = async (req, res) => {
   try {
     const extra = req.body.data?.extra;
     const filterBy = req.body.data?.filter;
+    const { initiator, role} = req;
     const limit = 25;
     let pageIndex = extra.pageIndex > 0 ? extra.pageIndex : 0;
     const pageJump = extra.pageJump ? (extra.pageJump * limit) : pageIndex;
@@ -96,7 +102,7 @@ export const viewUsers = async (req, res) => {
     if (extra.orderByDateCreated === "-1") {
       sort["_id"] = -1;
     }
-
+    await actionLog(filterBy, initiator, role, 'viewUsers');
     const searchQuery = {};
 
     if (!filterBy.organizationId) {
@@ -155,6 +161,7 @@ export const viewUsers = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const userData = req.body.data?.form;
+    const filterBy = req.body.data?.filter;
     const { initiator, role} = req;
     const { error, value } = resetUserSchema.validate(userData, { abortEarly: false });
       if (error) {
@@ -166,7 +173,7 @@ export const resetPassword = async (req, res) => {
 
     const db = getDb();
     const adminUsers = db.collection("admin_users");
-    const searchQuery = { loginname: loginname, status: "active" };
+    const searchQuery = { _id: new ObjectId(filterBy.userId), status: "active" };
     const adminUser = await adminUsers.findOne(searchQuery);
     if (!adminUser) {
       return res.status(400).json({ status: "failure", message: "user not found" });

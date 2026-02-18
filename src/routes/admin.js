@@ -1,8 +1,10 @@
 import express from "express";
-import { authAdmin, orgStats, createUser, updateUser,viewUsers,orgView, addImei, updateImei} from "../controller/authAdmin.js";
-import { resetPassword, createUser, updateUser, viewUsers } from "../controller/users.js";
-import { createOrganization, editOrganization } from "../controller/organization.js";
+import { authAdmin} from "../controller/authAdmin.js";
+import { resetPassword, createUser, updateUser, viewUsers } from "../controller/user.js";
+import { createOrganization, editOrganization, viewOrganization, deleteOrganization, adminDashBoardCount } from "../controller/organization.js";
+import { createVehicle, updateVehicle, deleteVehicle, removeVehicle  } from "../controller/vehicle.js";
 import { isAuth} from "../middleware/authGuard.js";
+import { assignImei, updateImei, removeImei, viewImei, unassignImei  } from "../controller/imei.js";
 
 const router = express.Router();
 //admin/adminauthentication
@@ -12,13 +14,15 @@ router.post("/adminauthentication", authAdmin);
 //organization
 
 //admin/admin_dashboardcounts
-router.post("/admin_dashboardcounts", isAuth, orgStats);
+router.post("/admin_dashboardcounts", isAuth, adminDashBoardCount);
 //admin/create
 router.post("/create", isAuth, createOrganization);
 //admin/edit
 router.post("/edit", isAuth, editOrganization);
 //admin/view
-router.post("/view", isAuth, orgView);
+router.post("/view", isAuth, viewOrganization);
+//admin/view
+router.post("/delete", isAuth, deleteOrganization);
 
 //user
 
@@ -34,10 +38,23 @@ router.post("/orgadmin_updatepassword", isAuth, resetPassword);
 
 //tracking
 
+//
+router.post("/createVehicle", isAuth, createVehicle);
+router.post("/updateVehicle", isAuth, updateVehicle);
+router.post("/removeVehicle", isAuth, removeVehicle);
+router.post("/deleteVehicle", isAuth, deleteVehicle);
+
+
 //admin/newtracker
-router.post("/addImei", isAuth, addImei);
+router.post("/addImei", isAuth, assignImei);
 //admin/newtracker
 router.post("/updateImei", isAuth, updateImei);
+//admin/newtracker
+router.post("/updateImei", isAuth, unassignImei);
+//admin/newtracker
+router.post("/updateImei", isAuth, removeImei);
+//admin/newtracker
+router.post("/updateImei", isAuth, viewImei);
 
 
 

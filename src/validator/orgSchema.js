@@ -295,5 +295,36 @@ export const updateOrgSchema = Joi.object({
     }),
   ),
   modifiedAt: Joi.string().isoDate().default(() => new Date().toISOString()),
-  status: Joi.string().valid("active", "inactive").default("active"),
+  status: Joi.string().valid("active", "inactive", "hold")
 }).unknown(false);
+
+const strOptional  = Joi.string().trim().allow('', null).optional();
+const boolString   = Joi.string().valid('true', 'false').optional();
+export const viewOrgFilterSchema = Joi.object({
+  organizationId: strOptional,
+  name          : strOptional,
+  category      : strOptional,
+  city          : strOptional,
+  state         : strOptional,
+  country       : strOptional,
+  email         : strOptional,
+  location      : strOptional,
+  smsAlert      : boolString,
+  appAlert      : boolString,
+  emailAlert    : boolString,
+  callAlert     : boolString,
+  rfidAlert     : boolString,
+  etaAlert      : boolString,
+  alertlock     : boolString
+  // regNo         : strOptional,
+  // boxId         : strOptional,
+  // imei          : strOptional,
+  // simCard       : strOptional,
+});
+const strRequired  = Joi.string().trim().required();
+export const deleteOrgSchema = Joi.object({
+  organizationId : strRequired.label('organizationId'),
+});
+
+
+
