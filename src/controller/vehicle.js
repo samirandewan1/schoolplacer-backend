@@ -5,84 +5,81 @@ import { getDb } from "../config/mongo.js";
 
 
 export const createVehicle = async(req, res) => {
-//   const { postdata, userTracker } = req;
-//   const form = postdata?.form;
-   const vehicleData = req.body.data?.form;
-    const { initiator, role} = req;
-
-  await actionLog(vehicleData, initiator, role, 'createVehicle');
-
-  const { error, value } = createVehicleSchema.validate(vehicleData, { abortEarly: false });
+  const form = req.body.data?.form;
+  const { initiator, role} = req;
+  await actionLog(form, initiator, role, 'createVehicle');
+  
+  
+  const { error, value } = createVehicleSchema.validate(form, { abortEarly: false });
+  console.log('error'+ value);
   if (error) {
     return res.json({ status: 'failure', response: error.details.map(d => d.message) });
   }
-
+  //console.log('value: '+JSON.stringify({ organizationId: value.organizationId, status: 'active' }));
   const db = getDb();
 
   // Resolve organization
   const org = await db.collection('organization').findOne(
-    { organizationId: value.organizationId, status: 'active' },
-    { projection: { orgRefNo: 1 } }
+    { _id: new ObjectId(value.organizationId), status: 'active' },
+    { projection: { name: 1 } }
   );
-  if (!org) return res.json({ status: 'failure', ec: 'SCno organization found' });
+  if (!org) return res.status(400).json({ status: 'failure', message: 'organization not found' });
 
-//   const vehRegnoString = value.vehicleInformation.regno.replace(/[^A-Za-z0-9]/g, '');
-//   const vehicleId      = String(org.orgRefNo) + vehRegnoString;
 
+  const vehRegnoString  = value.regno;
+  console.log(vehRegnoString);
   // Check vehicle uniqueness
   const vehicleExists = await db.collection('organization_vehicle').findOne({
-    vehicleId,
+    regno: vehRegnoString,
     organizationId: value.organizationId,
     status        : 'active',
   });
-  if (vehicleExists) return res.json({ status: 'failure', ec: 'already exists' });
+  if (vehicleExists) return res.status(400).json({ status: 'failure', message: 'already exists' });
 
-  const vi = value.vehicleInformation;
+ 
 
-  const document = {
-    vehicleId,
-    organizationId      : value.organizationId,
-    vehicleInformation  : {
-      name                 : vi.name,
-      regno                : vi.regno,
-      type                 : vi.type                  || '',
-      make                 : vi.make                  || '',
-      model                : vi.model                 || '',
-      tabDeviceName        : vi.tabDeviceName          || '',
-      ownerName            : vi.ownerName              || '',
-      ownerPhone           : vi.ownerPhone             || '',
-      ownerAddress         : vi.ownerAddress           || '',
-      manufactureYear      : vi.manufactureYear        || '',
-      purchasedYear        : vi.purchasedYear          || '',
-      color                : vi.color                  || '',
-      fuel                 : vi.fuel                   || '',
-      engineNumber         : vi.engineNumber           || '',
-      chasisNumber         : vi.chasisNumber           || '',
-      insuranceCompany     : vi.insuranceCompany       || '',
-      insurancePolicyNumber: vi.insurancePolicyNumber  || '',
-      insuranceExpiryDate  : vi.insuranceExpiryDate ? new Date(vi.insuranceExpiryDate) : null,
-      seatCapacity         : vi.seatCapacity           || '',
-      driverName           : vi.driverName             || '',
-      driverPhone          : vi.driverPhone            || '',
-      driverAddress        : vi.driverAddress          || '',
-    },
-    //status    : 'active',
-    // Date      : new Date().toLocaleDateString('en-GB').replace(/\//g, ''), // ddmmyyyy
-    // logTimeMS : Date.now(),
-  };
+  // const document = {
+    
+  //   organizationId      : value.organizationId,
+  //    name                 : value.name,
+  //     regno                : value.regno,
+  //     type                 : value.type                  || '',
+  //     make                 : value.make                  || '',
+  //     model                : value.model                 || '',
+  //     tabDevalueceName        : value.tabDevalueceName          || '',
+  //     ownerName            : value.ownerName              || '',
+  //     ownerPhone           : value.ownerPhone             || '',
+  //     ownerAddress         : value.ownerAddress           || '',
+  //     manufactureYear      : value.manufactureYear        || '',
+  //     purchasedYear        : value.purchasedYear          || '',
+  //     color                : value.color                  || '',
+  //     fuel                 : value.fuel                   || '',
+  //     engineNumber         : value.engineNumber           || '',
+  //     chasisNumber         : value.chasisNumber           || '',
+  //     insuranceCompany     : value.insuranceCompany       || '',
+  //     insurancePolicyNumber: value.insurancePolicyNumber  || '',
+  //     insuranceExpiryDate  : value.insuranceExpiryDate ? new Date(value.insuranceExpiryDate) : null,
+  //     seatCapacity         : value.seatCapacity           || '',
+  //     driverName           : value.driverName             || '',
+  //     driverPhone          : value.driverPhone            || '',
+  //     driverAddress        : value.driverAddress          || '',
+    
+  
+  // };
 
-  const { acknowledged, insertedId } = await db.collection('organization_vehicle').insertOne(document);
+  const { acknowledged, insertedId } = await db.collection('organization_vehicle').insertOne(value);
   return res.status(200).json({ status: 'success', vehicleId: insertedId });
 }
 
 
 export const updateVehicle = async(req, res) =>{
-//   const { postdata, userTracker } = req;
-//   const form = postdata?.form;
-   const vehicleData = req.body.data?.form;
-   const { initiator, role} = req;
 
-  await actionLog(vehicleData, initiator, role, 'updateVehicle');
+   const form = req.body.data?.form;
+  const { initiator, role} = req;
+  const filterBy = req.body.data?.filter;
+  
+
+  await actionLog(form, initiator, role, 'updateVehicle');
 
   const { error, value } = updateVehicleSchema.validate(form, { abortEarly: false });
   if (error) {
@@ -90,53 +87,25 @@ export const updateVehicle = async(req, res) =>{
   }
 
   const db      = getDb();
-  const $set    = {};
-  const vi      = value.vehicleInformation || {};
-
-  if (value.status) $set.status = value.status;
-
-  const viFields = [
-    'name', 'regno', 'type', 'make', 'model', 'tabDeviceName',
-    'ownerName', 'ownerPhone', 'ownerAddress', 'manufactureYear',
-    'purchasedYear', 'color', 'fuel', 'engineNumber', 'chasisNumber',
-    'insuranceCompany', 'insurancePolicyNumber', 'seatCapacity',
-    'driverName', 'driverPhone', 'driverAddress',
-  ];
-  for (const field of viFields) {
-    if (vi[field] !== undefined) $set[`vehicleInformation.${field}`] = vi[field];
-  }
-  if (vi.insuranceExpiryDate !== undefined) {
-    $set['vehicleInformation.insuranceExpiryDate'] = vi.insuranceExpiryDate
-      ? new Date(vi.insuranceExpiryDate)
-      : null;
-  }
-
-  if (Object.keys($set).length === 0) {
-    return res.json({ status: 'failure', response: ['No fields to update'] });
-  }
-
+  
   const result = await db.collection('organization_vehicle').updateOne(
-    { vehicleId: value.vehicleId, organizationId: value.organizationId },
-    { $set }
+    { _id : new ObjectId(filterBy.vehicleId), organizationId: filterBy.organizationId },
+    { $set: value }
   );
+  if (result.matchedCount === 0) return res.status(400).json({ status: 'failure', message: 'failed to update' });
 
-  if (result.matchedCount === 0) return res.status(400).json({ status: 'failure', ec: 'failedupdate failed' });
-
-  return res.json({ status: 'success', vehicleId: value.vehicleId });
+  return res.json({ status: 'success', vehicleId: filterBy.vehicleId });
 }
 
 
 export const deleteVehicle = async(req, res) => {
-//   const { postdata, userTracker } = req;
-//   const form = postdata?.form;
 
-//   await orgUsersActionLog(postdata, userTracker, 'admin', 'deleteVehicle');
 const vehicleData = req.body.data?.form;
    const { initiator, role} = req;
 
-  await actionLog(vehicleData, initiator, role, 'updateVehicle');
+  await actionLog(vehicleData, initiator, role, 'deleteVehicle');
 
-  const { error, value } = deleteVehicleSchema.validate(form, { abortEarly: false });
+  const { error, value } = deleteVehicleSchema.validate(vehicleData, { abortEarly: false });
   if (error) {
     return res.json({ status: 'failure', ec: 'SCB5' });
   }
@@ -144,30 +113,27 @@ const vehicleData = req.body.data?.form;
   const db = getDb();
 
   const vehicleExists = await db.collection('organization_vehicle').countDocuments({
-    vehicleId     : value.vehicleId,
+    _id     : new ObjectId(value.vehicleId),
     organizationId: value.organizationId,
-    $or           : [{ status: 'active' }, { status: 'disabled' }],
+    $or           : [{ status: 'active' }, { status: 'inactive' }],
   });
-  if (vehicleExists === 0) return res.status(400).json({ status: 'failure', ec: 'SCB7' });
+  if (vehicleExists === 0) return res.status(400).json({ status: 'failure', message: 'vehicle not found' });
 
   await db.collection('organization_vehicle').updateOne(
-    { vehicleId: value.vehicleId, organizationId: value.organizationId },
+    { _id: new ObjectId(value.vehicleId), organizationId: value.organizationId },
     { $set: { status: 'hold' } }
   );
 
-  return res.status(400).json({ status: 'success', vehicleId: value.vehicleId });
+  return res.status(200).json({ status: 'success', vehicleId: value.vehicleId });
 }
 
 export const removeVehicle = async(req, res) => {
-  const { postdata, userTracker } = req;
-  const form = postdata?.form;const vehicleData = req.body.data?.form;
+ const vehicleData = req.body.data?.form;
    const { initiator, role} = req;
 
-  await actionLog(vehicleData, initiator, role, 'updateVehicle');
+    await actionLog(vehicleData, initiator, role, 'removeVehicle');
 
-  
-
-  const { error, value } = deleteVehicleSchema.validate(form, { abortEarly: false });
+  const { error, value } = deleteVehicleSchema.validate(vehicleData, { abortEarly: false });
   if (error) {
     return res.json({ status: 'failure', ec: 'SCB5' });
   }
@@ -175,13 +141,13 @@ export const removeVehicle = async(req, res) => {
   const db = getDb();
 
   const vehicleExists = await db.collection('organization_vehicle').countDocuments({
-    vehicleId     : value.vehicleId,
+    _id     : new ObjectId(value.vehicleId),
     organizationId: value.organizationId,
   });
-  if (vehicleExists === 0) return res.json({ status: 'failure', ec: 'SCB7' });
+  if (vehicleExists === 0) return res.json({ status: 'failure', message: 'no ve' });
 
   await db.collection('organization_vehicle').deleteOne({
-    vehicleId     : value.vehicleId,
+   _id     : new ObjectId(value.vehicleId),
     organizationId: value.organizationId,
   });
 
@@ -189,23 +155,15 @@ export const removeVehicle = async(req, res) => {
 }
 
 
-  const viewVehicles = async (req, res) =>{
-
+  export const viewVehicles = async (req, res) =>{
+    console.log(`test: ${JSON.stringify(req.body)}`);
     const vehicleData = req.body.data?.form;
     const filterBy = req.body.data?.filter || {};
     const extra    = req.body.data?.extra  || {};
     const { initiator, role} = req;
 
   await actionLog(vehicleData, initiator, role, 'viewVehicles');
-//   const { postdata, userTracker } = req;
-//   const filterBy = postdata?.filter || {};
-//   const extra    = postdata?.extra  || {};
-
-
-
-  //await orgUsersActionLog(postdata, userTracker, 'admin', 'viewVehicles');
-
-  const { error } = viewVehiclesSchema.validate(filterBy, { abortEarly: false });
+  const { error } = viewVehiclesSchema.validate(vehicleData, { abortEarly: false });
   if (error) {
     return res.json({ status: 'failure', response: error.details.map(d => d.message) });
   }

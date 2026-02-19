@@ -521,7 +521,7 @@ export const authAdmin = async (req, res) => {
 //         orArray.push({ imei2: imeiData.imei2 });
 //       }
 //     const db = getDb();
-//     const imeiColl = db.collection("organization_imeis");
+//     const imeiColl = db.collection("organization_imei");
     
 //     const  imei = await imeiColl.findOne({ $or: orArray });
 //     console.log({$or: orArray });
@@ -564,7 +564,7 @@ export const authAdmin = async (req, res) => {
 //       orArray.push({status: 'active'})
    
 //     const db = getDb();
-//     const imeiColl = db.collection("organization_imeis");
+//     const imeiColl = db.collection("organization_imei");
 //     const  imei = await imeiColl.findOne({$or: orArray });
 //     const orgId = imeiData.organizationId
 //     if (imei) {

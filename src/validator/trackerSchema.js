@@ -87,9 +87,40 @@ import Joi from "joi";
 // });
 
 
-export const vehicleInfoSchema = Joi.object({
+// export const vehicleInfoSchema = Joi.object({
+ 
+//   type                 : Joi.string().trim().allow('').optional(),
+//   make                 : Joi.string().trim().allow('').optional(),
+//   model                : Joi.string().trim().allow('').optional(),
+//   tabDeviceName        : Joi.string().trim().allow('').optional(),
+//   ownerName            : Joi.string().trim().allow('').optional(),
+//   ownerPhone           : Joi.string().trim().allow('').optional(),
+//   ownerAddress         : Joi.string().trim().allow('').optional(),
+//   manufactureYear      : Joi.string().trim().allow('').optional(),
+//   purchasedYear        : Joi.string().trim().allow('').optional(),
+//   color                : Joi.string().trim().allow('').optional(),
+//   fuel                 : Joi.string().trim().allow('').optional(),
+//   engineNumber         : Joi.string().trim().allow('').optional(),
+//   chasisNumber         : Joi.string().trim().allow('').optional(),
+//   insuranceCompany     : Joi.string().trim().allow('').optional(),
+//   insurancePolicyNumber: Joi.string().trim().allow('').optional(),
+//   insuranceExpiryDate  : Joi.date().iso().allow(null).optional(),
+//   seatCapacity         : Joi.alternatives().try(Joi.string(), Joi.number()).allow('').optional(),
+//   driverName           : Joi.string().trim().allow('').optional(),
+//   driverPhone          : Joi.string().trim().allow('').optional(),
+//   driverAddress        : Joi.string().trim().allow('').optional(),
+// });
+
+// export const vehicleInfoUpdateSchema = vehicleInfoSchema.fork(
+//   ['name', 'regno'],
+//   f => f.optional()
+// );
+
+export const createVehicleSchema = Joi.object({
+  organizationId       : Joi.string().trim().required(),
   name                 : Joi.string().trim().required(),
   regno                : Joi.string().trim().required(),
+  imeiId               : Joi.string().trim().optional(),
   type                 : Joi.string().trim().allow('').optional(),
   make                 : Joi.string().trim().allow('').optional(),
   model                : Joi.string().trim().allow('').optional(),
@@ -110,26 +141,37 @@ export const vehicleInfoSchema = Joi.object({
   driverName           : Joi.string().trim().allow('').optional(),
   driverPhone          : Joi.string().trim().allow('').optional(),
   driverAddress        : Joi.string().trim().allow('').optional(),
-});
-
-export const vehicleInfoUpdateSchema = vehicleInfoSchema.fork(
-  ['name', 'regno'],
-  f => f.optional()
-);
-
-export const createVehicleSchema = Joi.object({
-  organizationId    : Joi.string().trim().required(),
-  vehicleInformation: vehicleInfoSchema.required(),
   modifiedAt: Joi.string().isoDate().default(() => new Date().toISOString()),
-  status: Joi.string().valid("active", "inactive", "hold")
+  status: Joi.string().valid("active", "inactive", "hold").default("active"),
 });
 
 export const updateVehicleSchema = Joi.object({
-  organizationId    : Joi.string().trim().required(),
-  vehicleId         : Joi.string().trim().required(),
-  vehicleInformation: vehicleInfoUpdateSchema.optional(),
-  status            : Joi.string().valid('active', 'disabled', 'hold').optional(),
+  name                : Joi.string().trim().optional(),
+  regno                : Joi.string().trim().optional(),
+  imeiId               : Joi.string().trim().optional(),
+  type                 : Joi.string().trim().allow('').optional(),
+  make                 : Joi.string().trim().allow('').optional(),
+  model                : Joi.string().trim().allow('').optional(),
+  tabDeviceName        : Joi.string().trim().allow('').optional(),
+  ownerName            : Joi.string().trim().allow('').optional(),
+  ownerPhone           : Joi.string().trim().allow('').optional(),
+  ownerAddress         : Joi.string().trim().allow('').optional(),
+  manufactureYear      : Joi.string().trim().allow('').optional(),
+  purchasedYear        : Joi.string().trim().allow('').optional(),
+  color                : Joi.string().trim().allow('').optional(),
+  fuel                 : Joi.string().trim().allow('').optional(),
+  engineNumber         : Joi.string().trim().allow('').optional(),
+  chasisNumber         : Joi.string().trim().allow('').optional(),
+  insuranceCompany     : Joi.string().trim().allow('').optional(),
+  insurancePolicyNumber: Joi.string().trim().allow('').optional(),
+  insuranceExpiryDate  : Joi.date().iso().allow(null).optional(),
+  seatCapacity         : Joi.alternatives().try(Joi.string(), Joi.number()).allow('').optional(),
+  driverName           : Joi.string().trim().allow('').optional(),
+  driverPhone          : Joi.string().trim().allow('').optional(),
+  driverAddress        : Joi.string().trim().allow('').optional(),
   modifiedAt: Joi.string().isoDate().default(() => new Date().toISOString()),
+  status: Joi.string().valid("active", "inactive", "hold")
+  
 });
 
 export const deleteVehicleSchema = Joi.object({

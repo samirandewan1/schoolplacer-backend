@@ -54,5 +54,5 @@ export const viewImeiSchema = Joi.object({
   organizationId: Joi.string().trim().required(),
   vehicleId     : Joi.string().trim().optional(),
   imei          : Joi.string().trim().optional(),
-  status        : Joi.string().valid('active', 'disabled', 'hold').optional(),
+  status        : Joi.string().valid('active', 'inactive', 'hold').optional(),
 });

@@ -2,7 +2,7 @@ import express from "express";
 import { authAdmin} from "../controller/authAdmin.js";
 import { resetPassword, createUser, updateUser, viewUsers } from "../controller/user.js";
 import { createOrganization, editOrganization, viewOrganization, deleteOrganization, adminDashBoardCount } from "../controller/organization.js";
-import { createVehicle, updateVehicle, deleteVehicle, removeVehicle  } from "../controller/vehicle.js";
+import { createVehicle, updateVehicle, deleteVehicle, removeVehicle, viewVehicles  } from "../controller/vehicle.js";
 import { isAuth} from "../middleware/authGuard.js";
 import { assignImei, updateImei, removeImei, viewImei, unassignImei  } from "../controller/imei.js";
 
@@ -43,6 +43,7 @@ router.post("/createVehicle", isAuth, createVehicle);
 router.post("/updateVehicle", isAuth, updateVehicle);
 router.post("/removeVehicle", isAuth, removeVehicle);
 router.post("/deleteVehicle", isAuth, deleteVehicle);
+router.post("/viewVehicle", isAuth, viewVehicles);
 
 
 //admin/newtracker
@@ -50,11 +51,11 @@ router.post("/addImei", isAuth, assignImei);
 //admin/newtracker
 router.post("/updateImei", isAuth, updateImei);
 //admin/newtracker
-router.post("/updateImei", isAuth, unassignImei);
+router.post("/unassignImei", isAuth, unassignImei);
 //admin/newtracker
-router.post("/updateImei", isAuth, removeImei);
+router.post("/removeImei", isAuth, removeImei);
 //admin/newtracker
-router.post("/updateImei", isAuth, viewImei);
+router.post("/viewImei", isAuth, viewImei);
 
 
 

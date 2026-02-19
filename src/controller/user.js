@@ -73,7 +73,7 @@ export const updateUser = async (req, res) => {
      if (value.loginname) {
         //document.loginName = value.loginname;
         const loginExists = await db.collection('organization_users').countDocuments({
-        loginName: value.loginname,
+        loginname: value.loginname,
         organizationId: orgId,
         status: 'active',
         });
@@ -194,7 +194,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ status: "failure", message: "user not found" });
     }
     const securePassword = await bcrypt.hash(value.password, 12);
-    const result = await adminUsers.updateOne({loginname: adminUser.loginname}, {$set: {password: securepassword}})
+    const result = await adminUsers.updateOne({loginname: adminUser.loginname}, {$set: {password: securePassword}})
     if(result.modifiedCount === 0){
       return res.status(400).json({ status: "failure", message: "password is not updated" });
     }

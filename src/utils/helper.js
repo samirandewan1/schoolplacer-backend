@@ -4,7 +4,7 @@ import { encrypt } from "./crypto.js";
 
   export const actionLog = async(postdata, userTracker, role, endpoint) =>{
   try {
-    console.log(userTracker);
+    //console.log(userTracker);
     const data  = encrypt(JSON.stringify(postdata))
     const db = getDb();
     const col = db.collection('actionLog');
