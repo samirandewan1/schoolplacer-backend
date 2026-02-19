@@ -5,38 +5,40 @@ import { getDb } from "../config/mongo.js";
 
 export const createOrganization = async (req, res) => {
   try {
-    const orgData = req.body.data?.form;
-    const { initiator, role} = req;
+    const orgData             = req.body?.data?.form;
+    const { initiator, role } = req;
+
     if (!orgData) {
       return res.status(400).json({ status: "failure", message: "Missing input" });
     }
     
     const { error, value } = createOrgSchema.validate(orgData, { abortEarly: false });
     if (error) {
-      const validationErrors = error.details.map(detail => detail.message);
-      return res.status(400).json({ status: "failure", message: validationErrors });
+      return res.status(400).json({
+        status: "failure",
+        message: error.details.map(d => d.message),
+      });
     }
 
-    await actionLog(orgData, initiator, role, 'createOrganization');
+    await actionLog(orgData, initiator, role, "createOrganization");
 
 
     const db = getDb();
     const orgColl = db.collection("organization");
-    const searchQuery = { name: orgData.name, status: "active" };
-    
-    const org = await orgColl.findOne(searchQuery);
-    if (org) {
-      return res.status(400).json({ status: "failure", message: "organization already exist" });
+    const exists  = await orgColl.findOne({ name: value.name, status: "active" });
+
+    if (exists) {
+      return res.status(409).json({ status: "failure", message: "Organization already exists" });
     }
     
     const { acknowledged, insertedId } = await orgColl.insertOne(value);
-    if(acknowledged){
-      return res.status(200).json({ status: "success", organizationId: insertedId });
+    if (!acknowledged) {
+      return res.status(500).json({ status: "failure", message: "Failed to insert the record" });
     }
-    return res.status(400).json({ status: "failure", message: "failed to insert the record" });
 
+    return res.status(201).json({ status: "success", organizationId: insertedId });
   } catch (error) {
-    console.error(`Error on createOrganization: ${error}`);
+    console.error(`[createOrganization] ${error.message}`, { stack: error.stack });
     return res.status(500).json({ status: "failure", message: "Internal server error" });
   }
 };
@@ -44,9 +46,9 @@ export const createOrganization = async (req, res) => {
 
 export const editOrganization = async (req, res) => {
   try {
-    const orgData = req.body.data?.form;
-    const orgId = req.body.data.filter?.organizationId;
-    const { initiator, role} = req;
+    const orgData             = req.body?.data?.form;
+    const orgId               = req.body?.data?.filter?.organizationId;
+    const { initiator, role } = req;
 
     if (!orgData || !orgId) {
       return res.status(400).json({ status: "failure", message: "Missing input" });
@@ -54,25 +56,26 @@ export const editOrganization = async (req, res) => {
 
     const { error, value } = updateOrgSchema.validate(orgData, { abortEarly: false });
     if (error) {
-      const validationErrors = error.details.map(detail => detail.message);
-      return res.status(400).json({ status: "failure", message: validationErrors });
+      return res.status(400).json({
+        status: "failure",
+        message: error.details.map(d => d.message),
+      });
     }
 
-    await actionLog(orgData, initiator, role, 'editOrganization');
-    
+    await actionLog(orgData, initiator, role, "editOrganization");
 
     const db = getDb();
-    const orgColl = db.collection("organization");
-    
-    const {acknowledged} = await orgColl.updateOne({_id: new ObjectId(orgId)}, {$set: value});
+    const { matchedCount } = await db
+      .collection("organization")
+      .updateOne({ _id: new ObjectId(orgId) }, { $set: value });
 
-    if(acknowledged){
-      return res.status(200).json({ status: "success", message: orgId });
+    if (matchedCount === 0) {
+      return res.status(404).json({ status: "failure", message: "Organization not found" });
     }
-     return res.status(400).json({ status: "failure", message: "failed to update the record" });
 
+    return res.status(200).json({ status: "success", organizationId: orgId });
   } catch (error) {
-    console.error(`Error on updateOrganization: ${error}`);
+    console.error(`[editOrganization] ${error.message}`, { stack: error.stack });
     return res.status(500).json({ status: "failure", message: "Internal server error" });
   }
 };
@@ -81,16 +84,19 @@ export const editOrganization = async (req, res) => {
 export const viewOrganization = async (req, res) => {
  
   try {
-    const extra = req.body.data?.extra;
-    const filterBy = req.body.data?.filter;
-    const { initiator, role} = req;
+    const extra               = req.body?.data?.extra  || {};
+    const filterBy            = req.body?.data?.filter || {};
+    const { initiator, role } = req;
 
-  await actionLog(filterBy, initiator, role, 'viewOrganization');
+    await actionLog(filterBy, initiator, role, "viewOrganization");
 
   const { error } = viewOrgFilterSchema.validate(filterBy, { abortEarly: false });
-  if (error) {
-    return res.json({ status: 'failure', response: error.details.map(d => d.message) });
-  }
+    if (error) {
+      return res.status(400).json({
+        status: "failure",
+        message: error.details.map(d => d.message),
+      });
+    }
   
   const limit     = 10;
   const pageIndex = extra.pageIndex > 0 ? extra.pageIndex : 0;
@@ -177,15 +183,17 @@ export const viewOrganization = async (req, res) => {
 }
 
 export const deleteOrganization = async (req, res) => {
-  const form = req.body.data?.form;
-  const organizationId = req.body.data.form?.organizationId;
-  const { initiator, role} = req;
-  await actionLog(form, initiator, role, 'deleteOrganization');
+   try {
+    const form                = req.body?.data?.form;
+    const organizationId      = form?.organizationId;
+    const { initiator, role } = req;
+  await actionLog(form, initiator, role, "deleteOrganization");
 
   const { error, value } = deleteOrgSchema.validate(form, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({ status: 'failure', message: 'parameter missing' });
-  }
+    if (error) {
+      return res.status(400).json({ status: "failure", message: "Parameter missing" });
+    }
+
 
   const db  = getDb();
   const org = await db.collection('organization').findOne({ _id: new ObjectId(organizationId), status: 'active' });
@@ -212,39 +220,42 @@ export const deleteOrganization = async (req, res) => {
   await db.collection('actionLog').insertOne({ action: 'delete', collection: 'organizations', user: initiator });
 
   return res.status(200).json({ status: 'success' });
+}catch (error) {
+    console.error(`[deleteOrganization] ${error.message}`, { stack: error.stack });
+    return res.status(500).json({ status: "failure", message: "Internal server error" });
+  }
+
 }
 
 
 export const adminDashBoardCount = async (req, res) => {
   try {
-    const { initiator, role} = req;
-   await actionLog('adminDashBoardCount', initiator, role, 'adminDashBoardCount');
+    const { initiator, role } = req;
+    await actionLog("adminDashBoardCount", initiator, role, "adminDashBoardCount");
 
-     const query = { status: "active" };
-    const db = getDb();
+    const db    = getDb();
+    const query = { status: "active" };
 
     const [
-      ActiveOrgCount,
-      ActiveTrackerCount,
+      activeOrgCount,
+      activeTrackerCount,
       activeAdminUC,
-      ActiveOrgAdminUC,
+      activeOrgAdminUC,
     ] = await Promise.all([
       db.collection("organization").countDocuments(query),
       db.collection("organization_tracker").countDocuments(query),
       db.collection("admin_users").countDocuments(query),
       db.collection("organization_users").countDocuments(query),
     ]);
-     const TotalOrgRPMcount = {
-      AdminStats: {
-        activeOrgCount: ActiveOrgCount,
-        activeTrackerCount: ActiveTrackerCount,
-        activeAdminUC: activeAdminUC,
-        activeOrgAdminUC: ActiveOrgAdminUC,
+
+    return res.status(200).json({
+      status: "success",
+      response: {
+        AdminStats: { activeOrgCount, activeTrackerCount, activeAdminUC, activeOrgAdminUC },
       },
-    };
-    return res.status(200).json({status: "success", response: TotalOrgRPMcount});
-  } catch (err) {
-    console.error("Internal Error:", err);
+    });
+  } catch (error) {
+    console.error(`[adminDashBoardCount] ${error.message}`, { stack: error.stack });
     return res.status(500).json({ status: "failure", message: "Internal server error" });
   }
 };

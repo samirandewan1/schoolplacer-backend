@@ -13,10 +13,12 @@ export const createUser = async (req, res) => {
      const { initiator, role} = req;
     const { error, value } = createUserSchema.validate(userData, { abortEarly: false });
     if (error) {
-      const validationErrors = error.details.map(detail => detail.message);
-      return res.status(400).json({ status: "failure", message: validationErrors });
+      return res.status(400).json({
+        status: "failure",
+        message: error.details.map(d => d.message),
+      });
     }
-    await actionLog(userData, initiator, role, 'createUser');
+    await actionLog(userData, initiator, role,  "createUser");
     const db = getDb();
     const userColl = db.collection("organization_users");
     const userExists = await db.collection('organization_users').countDocuments({
@@ -40,7 +42,7 @@ export const createUser = async (req, res) => {
     return res.status(400).json({ status: "failure", message: "failed to insert the record" });
 
   } catch (error) {
-    console.error(`Error on createOrganization: ${error}`);
+    console.error(`[createUser] ${error.message}`, { stack: error.stack });
     return res.status(500).json({ status: "failure", message: "Internal server error" });
   }
 };

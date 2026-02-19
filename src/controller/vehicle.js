@@ -5,16 +5,19 @@ import { getDb } from "../config/mongo.js";
 
 
 export const createVehicle = async(req, res) => {
-  const form = req.body.data?.form;
-  const { initiator, role} = req;
-  await actionLog(form, initiator, role, 'createVehicle');
-  
-  
-  const { error, value } = createVehicleSchema.validate(form, { abortEarly: false });
-  console.log('error'+ value);
-  if (error) {
-    return res.json({ status: 'failure', response: error.details.map(d => d.message) });
-  }
+   try {
+    const form                = req.body?.data?.form;
+    const { initiator, role } = req;
+
+    await actionLog(form, initiator, role, "createVehicle");
+
+    const { error, value } = createVehicleSchema.validate(form, { abortEarly: false });
+    if (error) {
+      return res.status(400).json({
+        status: "failure",
+        message: error.details.map(d => d.message),
+      });
+    }
   //console.log('value: '+JSON.stringify({ organizationId: value.organizationId, status: 'active' }));
   const db = getDb();
 
@@ -23,7 +26,9 @@ export const createVehicle = async(req, res) => {
     { _id: new ObjectId(value.organizationId), status: 'active' },
     { projection: { name: 1 } }
   );
-  if (!org) return res.status(400).json({ status: 'failure', message: 'organization not found' });
+  if (!org) {
+      return res.status(404).json({ status: "failure", message: "Organization not found" });
+    }
 
 
   const vehRegnoString  = value.regno;
@@ -34,57 +39,47 @@ export const createVehicle = async(req, res) => {
     organizationId: value.organizationId,
     status        : 'active',
   });
-  if (vehicleExists) return res.status(400).json({ status: 'failure', message: 'already exists' });
+  if (vehicleExists) {
+      return res.status(409).json({ status: "failure", message: "Vehicle with this registration already exists" });
+    }
 
- 
+    const { acknowledged, insertedId } = await db.collection("organization_vehicle").insertOne(value);
+    if (!acknowledged) {
+      return res.status(500).json({ status: "failure", message: "Failed to insert the record" });
+    }
 
-  // const document = {
-    
-  //   organizationId      : value.organizationId,
-  //    name                 : value.name,
-  //     regno                : value.regno,
-  //     type                 : value.type                  || '',
-  //     make                 : value.make                  || '',
-  //     model                : value.model                 || '',
-  //     tabDevalueceName        : value.tabDevalueceName          || '',
-  //     ownerName            : value.ownerName              || '',
-  //     ownerPhone           : value.ownerPhone             || '',
-  //     ownerAddress         : value.ownerAddress           || '',
-  //     manufactureYear      : value.manufactureYear        || '',
-  //     purchasedYear        : value.purchasedYear          || '',
-  //     color                : value.color                  || '',
-  //     fuel                 : value.fuel                   || '',
-  //     engineNumber         : value.engineNumber           || '',
-  //     chasisNumber         : value.chasisNumber           || '',
-  //     insuranceCompany     : value.insuranceCompany       || '',
-  //     insurancePolicyNumber: value.insurancePolicyNumber  || '',
-  //     insuranceExpiryDate  : value.insuranceExpiryDate ? new Date(value.insuranceExpiryDate) : null,
-  //     seatCapacity         : value.seatCapacity           || '',
-  //     driverName           : value.driverName             || '',
-  //     driverPhone          : value.driverPhone            || '',
-  //     driverAddress        : value.driverAddress          || '',
-    
-  
-  // };
-
-  const { acknowledged, insertedId } = await db.collection('organization_vehicle').insertOne(value);
-  return res.status(200).json({ status: 'success', vehicleId: insertedId });
+    return res.status(201).json({ status: "success", vehicleId: insertedId });
+ }catch (error) {
+    console.error(`[createVehicle] ${error.message}`, { stack: error.stack });
+    return res.status(500).json({ status: "failure", message: "Internal server error" });
+  }
 }
 
 
 export const updateVehicle = async(req, res) =>{
 
-   const form = req.body.data?.form;
-  const { initiator, role} = req;
-  const filterBy = req.body.data?.filter;
-  
+   try {
+    const form                = req.body?.data?.form;
+    const filterBy            = req.body?.data?.filter;
+    const { initiator, role } = req;
 
-  await actionLog(form, initiator, role, 'updateVehicle');
+    if (!filterBy?.vehicleId || !filterBy?.organizationId) {
+      return res.status(400).json({ status: "failure", message: "Missing filter fields" });
+    }
 
-  const { error, value } = updateVehicleSchema.validate(form, { abortEarly: false });
-  if (error) {
-    return res.json({ status: 'failure', response: error.details.map(d => d.message) });
-  }
+    if (!ObjectId.isValid(filterBy.vehicleId)) {
+      return res.status(400).json({ status: "failure", message: "Invalid vehicleId" });
+    }
+
+    await actionLog(form, initiator, role, "updateVehicle");
+    const { error, value } = updateVehicleSchema.validate(form, { abortEarly: false });
+    if (error) {
+      return res.status(400).json({
+        status: "failure",
+        message: error.details.map(d => d.message),
+      });
+    }
+
 
   const db      = getDb();
   
@@ -92,23 +87,29 @@ export const updateVehicle = async(req, res) =>{
     { _id : new ObjectId(filterBy.vehicleId), organizationId: filterBy.organizationId },
     { $set: value }
   );
-  if (result.matchedCount === 0) return res.status(400).json({ status: 'failure', message: 'failed to update' });
+   if (result.matchedCount === 0) {
+      return res.status(404).json({ status: "failure", message: "Vehicle not found" });
+    }
 
-  return res.json({ status: 'success', vehicleId: filterBy.vehicleId });
+    return res.status(200).json({ status: "success", vehicleId: filterBy.vehicleId });
+}catch (error) {
+    console.error(`[updateVehicle] ${error.message}`, { stack: error.stack });
+    return res.status(500).json({ status: "failure", message: "Internal server error" });
+}
 }
 
 
-export const deleteVehicle = async(req, res) => {
+export const deleteVehicle = async (req, res) => {
+  try {
+    const vehicleData         = req.body?.data?.form;
+    const { initiator, role } = req;
 
-const vehicleData = req.body.data?.form;
-   const { initiator, role} = req;
+    await actionLog(vehicleData, initiator, role, "deleteVehicle");
 
-  await actionLog(vehicleData, initiator, role, 'deleteVehicle');
-
-  const { error, value } = deleteVehicleSchema.validate(vehicleData, { abortEarly: false });
-  if (error) {
-    return res.json({ status: 'failure', ec: 'SCB5' });
-  }
+    const { error, value } = deleteVehicleSchema.validate(vehicleData, { abortEarly: false });
+    if (error) {
+      return res.status(400).json({ status: "failure", message: "Missing required fields" });
+    }
 
   const db = getDb();
 
@@ -117,7 +118,9 @@ const vehicleData = req.body.data?.form;
     organizationId: value.organizationId,
     $or           : [{ status: 'active' }, { status: 'inactive' }],
   });
-  if (vehicleExists === 0) return res.status(400).json({ status: 'failure', message: 'vehicle not found' });
+  if (vehicleExists === 0) {
+      return res.status(404).json({ status: "failure", message: "Vehicle not found" });
+    }
 
   await db.collection('organization_vehicle').updateOne(
     { _id: new ObjectId(value.vehicleId), organizationId: value.organizationId },
@@ -125,18 +128,23 @@ const vehicleData = req.body.data?.form;
   );
 
   return res.status(200).json({ status: 'success', vehicleId: value.vehicleId });
+}catch (error) {
+    console.error(`[deleteVehicle] ${error.message}`, { stack: error.stack });
+    return res.status(500).json({ status: "failure", message: "Internal server error" });
+}
 }
 
 export const removeVehicle = async(req, res) => {
- const vehicleData = req.body.data?.form;
-   const { initiator, role} = req;
+  try{
+  const vehicleData         = req.body?.data?.form;
+    const { initiator, role } = req;
 
-    await actionLog(vehicleData, initiator, role, 'removeVehicle');
+    await actionLog(vehicleData, initiator, role, "removeVehicle");
 
-  const { error, value } = deleteVehicleSchema.validate(vehicleData, { abortEarly: false });
-  if (error) {
-    return res.json({ status: 'failure', ec: 'SCB5' });
-  }
+    const { error, value } = deleteVehicleSchema.validate(vehicleData, { abortEarly: false });
+    if (error) {
+      return res.status(400).json({ status: "failure", message: "Missing required fields" });
+    }
 
   const db = getDb();
 
@@ -152,11 +160,15 @@ export const removeVehicle = async(req, res) => {
   });
 
   return res.json({ status: 'success', vehicleId: value.vehicleId });
+}catch (error) {
+    console.error(`[removeVehicle] ${error.message}`, { stack: error.stack });
+    return res.status(500).json({ status: "failure", message: "Internal server error" });
+}
 }
 
 
   export const viewVehicles = async (req, res) =>{
-    console.log(`test: ${JSON.stringify(req.body)}`);
+    try{
     const vehicleData = req.body.data?.form;
     const filterBy = req.body.data?.filter || {};
     const extra    = req.body.data?.extra  || {};
@@ -189,4 +201,8 @@ export const removeVehicle = async(req, res) => {
     .toArray();
 
   return res.json({ status: 'success', response: docs });
+}catch (error) {
+    console.error(`[viewVehicle] ${error.message}`, { stack: error.stack });
+    return res.status(500).json({ status: "failure", message: "Internal server error" });
+}
 }
